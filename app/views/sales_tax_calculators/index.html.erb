@@ -57,12 +57,9 @@
             </div>
         </div>
     </div>
-    <% if session[:qty].present? %>
-    	<%= link_to "Edit", sales_tax_calculators_new_path %>
-    <% else %>	
-    	<%= link_to "New", sales_tax_calculators_new_path %>
-    <% end %>	
-	</div>
+
+    <%= link_to "Back", root_path %>
+  </div>
 </div>
 
 <style type="text/css">

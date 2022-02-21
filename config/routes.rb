@@ -4,8 +4,10 @@ Rails.application.routes.draw do
   # root to: "sales_tax_calculators#index"
 
   root to: "/sales_tax_calculators/new", to: "sales_tax_calculators#new"
-  get "/sales_tax_calculators",          to: "sales_tax_calculators#index"
-  post "/sales_tax_calculators/create",  to: "sales_tax_calculators#create"
+
+  get  "/sales_tax_calculators/new",    to: "sales_tax_calculators#new"
+  get  "/sales_tax_calculators",        to: "sales_tax_calculators#index"
+  post "/sales_tax_calculators/create", to: "sales_tax_calculators#create"
 
   #get "/articles", to: "articles#index"
 end
