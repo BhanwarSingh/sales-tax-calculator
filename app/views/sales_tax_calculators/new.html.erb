@@ -1,0 +1,104 @@
+<div class="container">
+	<h3 style="text-align: center;">Sales Tax Calculator</h3>
+</div>
+<hr>
+<div class="container">
+	<div class="row">
+		<h3>Item Detail</h3>
+		<%= form_with url: "/sales_tax_calculators/create"  do |form| %>
+		<table class="table table-borderless">
+		  <thead>
+		    <tr>
+		      <th scope="col">Qty</th>
+		      <th scope="col">Item Description</th>
+		      <th scope="col">Shelf Price</th>
+		      <th scope="col"></th>
+		    </tr>
+		  </thead>
+		  <tbody id="tbody">
+		  	<% if session[:qty].present? %>
+		  	<% counter = 0 %>
+	  			<% session[:qty].each_with_index do |item, index| %>
+	  				<% counter = index.to_i + 1 %>
+	  				<tr id="counter_<%= counter %>">
+				      <td width="15%">
+				      	<%= form.number_field :qty, multiple: true, :class => 'form-control', value: item, min: 1 %>
+				      </td>
+				      <td width="30%">
+				      	<%= form.text_field :item_description, multiple: true, :class => 'form-control ', value: session[:item_description][index], placeholder: "Description" %>
+
+				      </td>
+				      <td width="20%">
+				      	<%= form.number_field :shelf_price, multiple: true, :class => 'form-control', value: session[:price][index], min: 0, step: 0.01, placeholder: "RS" %>
+				      	
+				      </td>
+				      <td width="10%">
+				      	<% if (counter == 1) %>
+				      		<%= link_to "+", "javascript:void(0)", class: "btn btn-primary" ,id: "plus_btn" %>
+				      	<% else %>
+				      		<%= link_to "-", "javascript:void(0)", class: "btn btn-danger" ,id: "minus_btn-#{counter}" %>
+				      	<% end %>
+				      </td>
+				    </tr>
+
+	  			<% end %>
+	  			<input type="hidden" id="counter_number" value="<%= counter %>">
+		  	<% else %>
+			    <tr id="counter_1">
+			      <td width="15%">
+			      	<%= form.number_field :qty, multiple: true, :class => 'form-control', min: 1 %>
+			      </td>
+			      <td width="30%">
+			      	<%= form.text_field :item_description, multiple: true, :class => 'form-control ', placeholder: "Description" %>
+
+			      </td>
+			      <td width="20%">
+			      	<%= form.number_field :shelf_price, multiple: true, :class => 'form-control', min: 0, step: 0.01, placeholder: "RS" %>
+			      	
+			      </td>
+			      <td width="10%">
+			      	<%= link_to "+", "javascript:void(0)", class: "btn btn-primary" ,id: "plus_btn" %>
+			      	<input type="hidden" id="counter_number" value="1">
+			      </td>
+			    </tr>
+			<% end %>
+		  </tbody>
+		</table>
+			<%= form.submit "Generate Invoice", class: "btn btn-primary btn-block" %>
+	<!-- </form> -->
+	<% end  %>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+	$(document).ready(function () {
+		$('body').on('click','#plus_btn', function(){
+			var counter_number = parseInt($('#counter_number').val()) + 1;
+
+			var html = `<tr id="counter_${counter_number}">
+		      <td width="15%">
+		      	<input type="number" class="form-control" id="qty" name="qty[]" min="1" class="qty" placeholder="Qty">
+		      </td>
+		      <td width="30%">
+		      	<input type="text" class="form-control" id="item_description" name="item_description[]" placeholder="Description">
+		      </td>
+		      <td width="20%">
+		      	<input type="number" class="form-control" name="shelf_price[]" id="shelf_price" min="0" step="0.01" placeholder="RS" class="">
+		      </td>
+		      <td width="10%">
+		      	<a class="btn btn-danger" href="javascript:void(0)" role="button" id="minus_btn-${counter_number}">-</a>
+		      </td>
+		    </tr>`;
+
+		    $('#tbody').append(html);
+		    $('#counter_number').val(counter_number);
+			
+		});
+
+		$('body').on('click', '[id^="minus_btn-"]', function (e) {
+			var counter_id = $(this).attr('id').split('-')[1];
+			$('#counter_'+counter_id).remove();
+		});
+	});
+</script>
