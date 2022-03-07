@@ -11,7 +11,7 @@
 		      <th scope="col">Qty</th>
 		      <th scope="col">Item Description</th>
 		      <th scope="col">Price with Tax
-		      	<%= select(nil, :select_currency, currency_dropdown, {},{ :class => 'form-select' }) %>
+		      	<%= select(nil, :select_currency, SalesTax::CURRENCY_DROPDOWN, {},{ :class => 'form-select' }) %>
 		      </th>
 		    </tr>
 		  </thead>
@@ -19,7 +19,7 @@
 		  	<% if session[:qty].present? %>
 	  			<% session[:qty].each_with_index do |item, index| %>
 	  				<tr id="counter">
-				      <td width="15%"><%= item %></td>
+				      <td width="15%"><%= item.to_i %></td>
 				      <td width="30%"><%= session[:item_description][index] %></td>
 				      <td width="20%" id="set_price-<%= index %>">€ <%= session[:total_price][index].round(2) %></td>
 				    </tr>
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <%= link_to "Back", root_path %>
+    <%= link_to "Back", new_sales_tax_calculator_path %>
   </div>
 </div>
 
