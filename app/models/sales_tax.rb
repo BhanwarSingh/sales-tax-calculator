@@ -1,50 +1,33 @@
 class SalesTax
 
-  CURRENCY_DROPDOWN = [['EUR', 'EUR'], ['INR', 'INR'], ['USD', 'USD']]
+  CURRENCY_DROPDOWN  = [['EUR', 'EUR'], ['INR', 'INR'], ['USD', 'USD']]
+  
+  TAX_EXEMPTED_PRODUCT = ["book", "food", "medicine"]
 
-  ITEM_CATEGORIES = ["book", "food", "medicine"]
-
-  def initialize(qty, item_description, price)
-    @qty              = qty
-    @item_description = item_description
-    @price            = price
+  def initialize(item)
+    @quantity    = item["quantity"].to_i
+    @description = item["description"].downcase
+    @price       = item["price"].to_f
   end
 
   def calculate
-    tax_on_price    = 0;
-    tax_on_imported = 0;
-    updated_price   = []
-    sales_tax       = []
+    total_price = @price * @quantity
 
-    @qty.each_with_index do |item, index|
-      description = @item_description[index].downcase
-      price       = @price[index].to_f * item.to_f
+    is_item_exempt = false
 
-      if description.include?('imported')
-        tax_on_imported = (price * 5) / 100
-      end
+    TAX_EXEMPTED_PRODUCT.each do |product|
+      is_item_exempt = @description.include?(product)
 
-      is_item_exempt = false
-
-      ITEM_CATEGORIES.each do |category|
-        if description.include?(category)
-          is_item_exempt = true
-          break
-        end
-      end
-
-      if is_item_exempt
-        updated_price << price + tax_on_imported
-        sales_tax     << tax_on_imported
-      else
-        tax_on_price = (price * 10) / 100
-
-        updated_price << price + tax_on_imported + tax_on_price
-        sales_tax     << tax_on_imported + tax_on_price
-      end
+      break if is_item_exempt
     end
 
-    return updated_price, sales_tax
+    tax_on_item = is_item_exempt ? 0 : ((total_price * 10) / 100)
+    import_duty = @description.include?('imported') ? ((total_price * 5) / 100) : 0
+
+    total_tax      = tax_on_item + import_duty
+    price_with_tax = total_price + total_tax
+
+    return total_tax, price_with_tax
   end
 
 end

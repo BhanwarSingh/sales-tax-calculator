@@ -1,21 +1,28 @@
 class SalesTaxCalculatorsController < ApplicationController
-
   def index
-    @total     = session[:total_price].present? ? session[:total_price].map(&:to_f).inject(:+).round(2) : 0.00
-    @total_tax = session[:sales_tax].present?   ? session[:sales_tax].inject(:+).round(2)               : 0.00
+    @items        = session[:items]
+    @total_tax    = session[:total_tax]
+    @total_amount = session[:total_amount]
   end
 
   def new
+    @items = session[:items]
   end
 
   def create
-    session[:qty]              = params[:qty]
-    session[:item_description] = params[:item_description]
-    session[:price]            = params[:shelf_price]
+    session[:items]        = []
+    session[:total_tax]    = 0
+    session[:total_amount] = 0
 
-    sales_tax = SalesTax.new(session[:qty], session[:item_description], session[:price])
+    params[:items].each do |item|
+      sales_tax = SalesTax.new(item)
 
-    session[:total_price], session[:sales_tax] = sales_tax.calculate
+      item["total_tax"], item["price_with_tax"] = sales_tax.calculate
+
+      session[:items]        << item
+      session[:total_tax]    += item["total_tax"]
+      session[:total_amount] += item["price_with_tax"]
+    end
 
     redirect_to sales_tax_calculators_path
   end

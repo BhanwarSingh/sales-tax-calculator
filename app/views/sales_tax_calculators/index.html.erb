@@ -6,56 +6,50 @@
 	<div class="row">
 		<h3>Receipt <small><a href="javascript:void(0)" id="download-link">Download</a></small></h3>
 		<table class="table table-borderless">
-		  <thead>
-		    <tr>
-		      <th scope="col">Qty</th>
-		      <th scope="col">Item Description</th>
-		      <th scope="col">Price with Tax
-		      	<%= select(nil, :select_currency, SalesTax::CURRENCY_DROPDOWN, {},{ :class => 'form-select' }) %>
-		      </th>
-		    </tr>
-		  </thead>
-		  <tbody id="tbody">
-		  	<% if session[:qty].present? %>
-	  			<% session[:qty].each_with_index do |item, index| %>
-	  				<tr id="counter">
-				      <td width="15%"><%= item.to_i %></td>
-				      <td width="30%"><%= session[:item_description][index] %></td>
-				      <td width="20%" id="set_price-<%= index %>">€ <%= session[:total_price][index].round(2) %></td>
-				    </tr>
-	  			<% end %>
-		  	<% else %>
-		  			<tr>
-		  				<td colspan="3">No Record Found </td>
-		  			</tr>
-		  	<% end %>
-		  </tbody>
-		</table>
-		<hr>
-		<div class="row mt-3">
-        <div class="col-lg-7">
+      <thead>
+        <tr>
+          <th scope="col">Qty</th>
+          <th scope="col">Item Description</th>
+          <th scope="col">Price with Tax
+            <%= select(nil, :select_currency, SalesTax::CURRENCY_DROPDOWN, {}, { :class => 'form-select' }) %>
+          </th>
+        </tr>
+      </thead>
+
+      <tbody id="tbody">
+        <% @items.each do |item| %>
+          <tr id="counter">
+            <td width="15%"><%= item["quantity"] %></td>
+            <td width="30%"><%= item["description"] %></td>
+            <td width="20%" class="price_with_tax" price="<%= item["price_with_tax"] %>">€ <%= item["price_with_tax"] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <hr>
+    <div class="row mt-3">
+      <div class="col-lg-7">
+      </div>
+
+      <div class="col-sm-5">
+        <div class="row my-2">
+          <div class="col-4">
+            Total Tax:
+          </div>
+          <div class="col-5">
+            <span id="total_tax">€ <%= @total_tax.to_f %></span>
+          </div>
         </div>
 
-        <div class="col-sm-5">
-            
-            <div class="row my-2">
-                <div class="col-4">
-                    Total Tax 
-                </div>
-                <div class="col-5">
-                    <span id="total_tax">€ <%= @total_tax.to_f %></span>
-                </div>
-            </div>
-
-            <div class="row my-2">
-                <div class="col-4">
-                    Total Amount
-                </div>
-                <div class="col-5">
-                    <span id="total">€ <%= @total.to_f %></span>
-                </div>
-            </div>
+        <div class="row my-2">
+          <div class="col-4">
+            Total Amount:
+          </div>
+          <div class="col-5">
+            <span id="total_amount">€ <%= @total_amount.to_f %></span>
+          </div>
         </div>
+      </div>
     </div>
 
     <%= link_to "Back", new_sales_tax_calculator_path %>
@@ -63,68 +57,64 @@
 </div>
 
 <style type="text/css">
-	#select_currency {
-		width: 50%;
+  #select_currency {
+    width: 50%;
     position: relative;
     margin-left: 6px;
     display: inline-block;
-	}
+  }
 </style>
 
 <script type="text/javascript">
-	$(document).ready(function () {
+  $(document).ready(function () {
+    $('#select_currency').on('change', function() {
+      var currency        = $(this).val();
+      var currency_price  = 1;
+      var currency_symbol = "€";
 
-		$('#select_currency').on('change', function() {
-			var price = '<%= session[:total_price].present? ? session[:total_price].map(&:to_f) : [] %>';
-			var sub_total = 0;
-			var curr = $(this).val();
-			var default_price = 1;
-			var default_curr = "€";
-			if ( curr == 'INR'){
-				default_price = 85.29;
-				default_curr = "₹";
-			}else if(curr == 'USD'){
-				default_price = 1.14;
-				default_curr = "$";
-			} 
+      if (currency == 'INR'){
+        currency_price  = 85.29;
+        currency_symbol = "₹";
+      }else if(currency == 'USD'){
+        currency_price  = 1.14;
+        currency_symbol = "$";
+      }
 
-			$.each(JSON.parse(price), function( index, value ) {
-				var actual_price = parseFloat(value * default_price).toFixed(2);
-				// sub_total  = (parseFloat(sub_total) + parseFloat(actual_price));
-			  var html = `${default_curr }  ${ actual_price}`;
-		 		$('#set_price-'+ index).text(html);
-			});
+      $(".price_with_tax").each(function() {
+        var price = this.getAttribute("price");
+        price = parseFloat(price * currency_price).toFixed(2);
+        this.innerHTML = `${currency_symbol} ${price}`;
+      });
 
-			var sub_total_tax = <%= @total_tax %>
-			var sub_total = <%= @total %>
-			var total  = (parseFloat(sub_total) * parseFloat(default_price));
-			var total_tax  = (parseFloat(sub_total_tax) * parseFloat(default_price));
-		 	$('#total').text(default_curr + ' '+ total.toFixed(2));
-		 	$('#total_tax').text(default_curr + ' '+ total_tax.toFixed(2));
+      var total_tax    = (parseFloat(<%= @total_tax %>)    * parseFloat(currency_price));
+      var total_amount = (parseFloat(<%= @total_amount %>) * parseFloat(currency_price));
+
+      $('#total_tax').text(currency_symbol    + ' '+ total_tax.toFixed(2));
+		 	$('#total_amount').text(currency_symbol + ' '+ total_amount.toFixed(2));
 		 });
 
-		$('#download-link').click(function ()
-			{
-			  var retContent = [];
-			  var retString = '';
-			  $('tbody tr').each(function (idx, elem)
-			  {
-			  	console.log(elem)
-			    var elemText = [];
-			    $(elem).children('td').each(function (childIdx, childElem)
-			    {
-			    	//console.log($(childElem).text());
-			      elemText.push($(childElem).text());
-			    });
-			    retContent.push(`(${elemText.join(',')})`);
-			  });
-			 // console.log(retContent)
-			  retString = retContent.join(',\r\n');
-				var file = new Blob([retString], {type: 'text/plain'});
-			  var btn = $('#download-link');
-			  btn.attr("href", URL.createObjectURL(file));
-			  btn.prop("download", "data.txt");
-			});
+		$('#download-link').click(function () {
+      var fileContent = ["Qty \t\t\t Item Description \t\t\t Price with Tax\n"];
+
+      $('tbody tr').each(function (idx, elem) {
+        var itemDetails = [];
+
+        $(elem).children('td').each(function (childIdx, childElem) {
+          itemDetails.push(childElem.innerHTML);
+		    });
+
+        fileContent.push(itemDetails.join('\t\t\t\t'));
+      });
+
+      fileContent.push("\n\nTotal Tax    - " + $('#total_tax').text())
+      fileContent.push("Total Amount - " + $('#total_amount').text())
+
+      fileContent = fileContent.join('\r\n');
+			var file = new Blob([fileContent], {type: 'text/plain'});
+		  var btn = $('#download-link');
+		  btn.attr("href", URL.createObjectURL(file));
+		  btn.prop("download", "data.txt");
+		});
 
 	});
 </script>
